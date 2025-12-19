@@ -170,16 +170,31 @@ jobs:
           git config --global user.name 'GitHub Actions'
           git config --global user.email 'actions@github.com'
           
-          git add -A
-          
-          if git diff --quiet && git diff --staged --quiet; then
-            echo "📭 No changes to commit"
+          # Only commit index.html (ignore/discard all other changed files)
+          if git diff --quiet -- index.html; then
+            echo "📭 index.html unchanged; nothing to commit"
             exit 0
           fi
           
-          echo "📝 Committing changes..."
+          echo "📦 Stashing all changes and keeping only index.html..."
+          git stash push -u -m "gha-temp: commit only index.html"
+          
+          # Restore index.html from the stash into the working tree
+          git checkout stash@{0} -- index.html
+          git add index.html
+          
+          if git diff --cached --quiet -- index.html; then
+            echo "📭 No staged changes in index.html; nothing to commit"
+            git stash drop || true
+            exit 0
+          fi
+          
+          echo "📝 Committing index.html..."
           TIMESTAMP=$(TZ=Asia/Shanghai date "+%Y-%m-%d %H:%M:%S")
           git commit -m "Auto update by GitHub Actions at $TIMESTAMP"
+          
+          # Discard all other changes that were stashed
+          git stash drop || true
           
           echo "⬆️ Pushing changes with retry..."
           for i in {1..5}; do
