@@ -3,6 +3,11 @@
 
 DeepSeek
 梁文锋
+智谱
+GLM
+MinMax
+kimi
+月之暗面
 
 华为
 鸿蒙
